@@ -1,10 +1,9 @@
-﻿namespace Lagerhantering
+﻿namespace ITSystem
 {
     internal class Program
     {
         static void Main(string[] args)
         {
-
         }
     }
 }
