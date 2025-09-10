@@ -12,6 +12,8 @@ namespace ITSystem.Data.Contexts
     internal class OrderDbContext : DbContext
     {
         public DbSet<Product> Products { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<User> Users { get; set; }
         public OrderDbContext(DbContextOptions<OrderDbContext> options) : base(options) { }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

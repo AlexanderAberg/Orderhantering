@@ -1,0 +1,10 @@
+﻿namespace ITSystem.Data.Entities
+{
+    internal class User
+    {
+        public int Id { get; set; }
+        public string Username { get; set; }
+        public string PasswordHash { get; set; }
+        public  ICollection<Order> Orders { get; set; }
+    }
+}
