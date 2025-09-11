@@ -17,6 +17,21 @@ namespace ITSystem.Services
             _db = db;
         }
 
+        public void ListProducts()
+        {
+            var products = _db.Products.ToList();
+
+            Console.WriteLine("== Produkter ==");
+            foreach (var product in products)
+            {
+                Console.WriteLine($"ID: {product.Id} | {product.Name} - {product.Description} ({product.Price:C})");
+            }
+
+            Console.WriteLine("\nTryck på valfri tangent för att fortsätta...");
+            Console.ReadKey();
+        }
+
+
         public Product? GetById(int id)
         {
             return _db.Products.Find(id);

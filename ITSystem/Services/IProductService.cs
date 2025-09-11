@@ -14,6 +14,7 @@ namespace ITSystem.Services
         void Create(Product product);
         void Update(Product product);
         void Delete(int id);
+        void ListProducts();
     }
 
 }
