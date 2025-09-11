@@ -15,5 +15,7 @@ namespace ITSystem.Data.Entities
         public User User { get; set; }
         public DateTime OrderDate { get; set; }
         public string Status { get; set; } = "Pending";
+        public int? LastEditedByAdminId { get; set; }
+        public User? LastEditedByAdmin { get; set; }
     }
 }
