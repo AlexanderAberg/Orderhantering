@@ -1,9 +1,12 @@
 ﻿using ITSystem.Data.Contexts;
 using ITSystem.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ITSystem.Services
 {
-    public class OrderService : IOrderService
+    internal class OrderService : IOrderService
     {
         private readonly OrderDbContext _db;
 
@@ -12,15 +15,7 @@ namespace ITSystem.Services
             _db = db;
         }
 
-        public Order? GetById(int id)
-        {
-            return _db.Orders
-                .Include(o => o.Product)
-                .Include(o => o.User)
-                .FirstOrDefault(o => o.Id == id);
-        }
-
-        public IEnumerable<Order> GetAll()
+        public List<Order> GetAllOrders()
         {
             return _db.Orders
                 .Include(o => o.Product)
@@ -28,28 +23,16 @@ namespace ITSystem.Services
                 .ToList();
         }
 
-        public IEnumerable<Order> GetByUserId(int userId)
+        public Order? GetOrderById(int orderId)
         {
             return _db.Orders
                 .Include(o => o.Product)
-                .Where(o => o.UserId == userId)
-                .ToList();
+                .Include(o => o.User)
+                .FirstOrDefault(o => o.Id == orderId);
         }
 
-        public void CreateOrder(int productId, int userId)
+        public void CreateOrder(Order order)
         {
-            var product = _db.Products.Find(productId);
-            if (product == null)
-                throw new Exception("Produkten finns inte.");
-
-            var order = new Order
-            {
-                ProductId = productId,
-                UserId = userId,
-                OrderDate = DateTime.Now,
-                Status = "Pending"
-            };
-
             _db.Orders.Add(order);
             _db.SaveChanges();
         }
@@ -60,19 +43,34 @@ namespace ITSystem.Services
             _db.SaveChanges();
         }
 
-        public void DeleteOrder(int orderId, int userId, bool isAdmin)
+        public void DeleteOrder(int orderId)
         {
-            var order = _db.Orders.FirstOrDefault(o => o.Id == orderId);
+            var order = _db.Orders.Find(orderId);
+            if (order != null)
+            {
+                _db.Orders.Remove(order);
+                _db.SaveChanges();
+            }
+        }
 
-            if (order == null)
-                throw new Exception("Ordern finns inte.");
+        public void ListOrdersByUser(int userId)
+        {
+            throw new NotImplementedException();
+        }
 
-            if (!isAdmin && order.UserId != userId)
-                throw new UnauthorizedAccessException("Du kan bara ta bort dina egna ordrar.");
+        public void CreateOrder(int userId)
+        {
+            throw new NotImplementedException();
+        }
 
-            _db.Orders.Remove(order);
-            _db.SaveChanges();
+        public void ModifyOrDeleteOwnOrder(int userId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ManageAllOrders(int adminId)
+        {
+            throw new NotImplementedException();
         }
     }
-
 }
