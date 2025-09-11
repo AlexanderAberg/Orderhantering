@@ -1,18 +1,31 @@
-﻿using ITSystem.Data.Contexts;
+﻿using BCrypt.Net;
+using ITSystem.Data.Contexts;
 using ITSystem.Data.Entities;
-using BCrypt.Net;
+using ITSystem.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace ITSystem
 {
     internal class OrderApp
     {
         private readonly OrderDbContext dbContext;
+        private readonly IOrderService _orderService;
+        private readonly IUserService _userService;
+        private readonly IProductService _productService;
         private User? currentUser = null;
 
-        public OrderApp(OrderDbContext dbContext)
+        public OrderApp(
+            OrderDbContext dbContext,
+            IOrderService orderService,
+            IUserService userService,
+            IProductService productService)
         {
             this.dbContext = dbContext;
+            _orderService = orderService;
+            _userService = userService;
+            _productService = productService;
         }
+
 
         internal void Init()
         {
@@ -55,7 +68,11 @@ namespace ITSystem
             do
             {
                 Console.Clear();
-                Console.WriteLine($"Inloggad som: {currentUser.Username} (User)");
+                if (currentUser != null)
+                    Console.WriteLine($"Inloggad som: {currentUser.Username} (User)");
+                else
+                    Console.WriteLine("Inloggad som: (User)");
+
                 Console.WriteLine("1. Produkter");
                 Console.WriteLine("2. Ordrar");
                 Console.WriteLine("3. Min profil");
@@ -72,7 +89,7 @@ namespace ITSystem
                         OrderMenu();
                         break;
                     case "3":
-                        ProfileMenu();
+                        UserMenu();
                         break;
                 }
 
@@ -87,7 +104,11 @@ namespace ITSystem
             do
             {
                 Console.Clear();
-                Console.WriteLine($"Inloggad som: {currentUser.Username} (Admin)");
+                if (currentUser != null)
+                    Console.WriteLine($"Inloggad som: {currentUser.Username} (Admin)");
+                else
+                    Console.WriteLine("Inloggad som: (Admin)");
+
                 Console.WriteLine("1. Produkter");
                 Console.WriteLine("2. Ordrar");
                 Console.WriteLine("3. Användare");
@@ -108,7 +129,7 @@ namespace ITSystem
                         UserAdminMenu();
                         break;
                     case "4":
-                        ProfileMenu();
+                        UserMenu();
                         break;
                 }
 
@@ -145,15 +166,7 @@ namespace ITSystem
 
         private void ListProducts()
         {
-            Console.Clear();
-            Console.WriteLine("== Produkter ==");
-
-            foreach (var product in dbContext.Products)
-            {
-                Console.WriteLine($"ID: {product.Id} | {product.Name} - {product.Description} ({product.Price:C})");
-            }
-
-            Pause();
+            _productService.ListProducts();
         }
 
         private void CreateOrder()
@@ -200,21 +213,21 @@ namespace ITSystem
 
             var orders = dbContext.Orders
                 .Where(o => o.UserId == currentUser.Id)
-                .Select(o => new
-                {
-                    o.Id,
-                    o.OrderDate,
-                    o.Status,
-                    ProductName = o.Product.Name
-                }).ToList();
+                .Include(o => o.Product)
+                .Include(o => o.LastEditedByAdmin)
+                .ToList();
 
             foreach (var o in orders)
             {
-                Console.WriteLine($"Order ID: {o.Id} | {o.ProductName} | {o.OrderDate} | Status: {o.Status}");
-            }
+                string editedInfo = o.LastEditedByAdmin != null
+                    ? $"(Ändrad av admin: {o.LastEditedByAdmin.Username})"
+                    : "";
 
-            Pause();
+                Console.WriteLine($"Order ID: {o.Id} | {o.Product.Name} | {o.OrderDate} | Status: {o.Status} {editedInfo}");
+            }
         }
+
+
 
         private void Pause()
         {
