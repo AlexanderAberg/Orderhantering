@@ -1,5 +1,7 @@
-﻿using ITSystem.Data.Contexts;
+﻿using System;
+using ITSystem.Data.Contexts;
 using ITSystem.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,7 +27,11 @@ namespace ITSystem
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    services.AddDbContext<OrderDbContext>();
+                    var connectionString = context.Configuration.GetConnectionString("DefaultConnection");
+
+                    services.AddDbContext<OrderDbContext>(options =>
+                        options.UseSqlServer(connectionString));
+
                     services.AddScoped<IOrderService, OrderService>();
                     services.AddScoped<IUserService, UserService>();
                     services.AddScoped<IProductService, ProductService>();
