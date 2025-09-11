@@ -27,5 +27,15 @@ namespace ITSystem.Data.Contexts
                 optionsBuilder.UseSqlServer(config.GetConnectionString("DefaultConnection"));
             }
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+        }
+
     }
 }
