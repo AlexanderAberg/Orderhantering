@@ -27,6 +27,8 @@ namespace ITSystem
                 {
                     services.AddDbContext<OrderDbContext>();
                     services.AddScoped<IOrderService, OrderService>();
+                    services.AddScoped<IUserService, UserService>();
+                    services.AddScoped<IProductService, ProductService>();
                     services.AddScoped<OrderApp>();
                 });
     }
