@@ -62,7 +62,49 @@ namespace ITSystem
                 UserMenu();
         }
 
-       
+        private void ProductMenu(bool admin = false)
+        {
+            string? input;
+            do
+            {
+                Console.Clear();
+                Console.WriteLine("== Produktmeny ==");
+
+                Console.WriteLine("1. Lista produkter");
+
+                if (admin)
+                {
+                    Console.WriteLine("2. Skapa ny produkt");
+                    Console.WriteLine("3. Uppdatera produkt");
+                    Console.WriteLine("4. Ta bort produkt");
+                }
+
+                Console.WriteLine("0. Tillbaka");
+                Console.Write("Val: ");
+                input = Console.ReadLine();
+
+                switch (input)
+                {
+                    case "1":
+                        _productService.ListProducts();
+                        break;
+
+                    case "2":
+                        if (admin) CreateProduct();
+                        break;
+
+                    case "3":
+                        if (admin) UpdateProduct();
+                        break;
+
+                    case "4":
+                        if (admin) DeleteProduct();
+                        break;
+                }
+
+            } while (input != "0");
+        }
+
 
         private void OrderMenu(bool admin = false)
         {
@@ -251,6 +293,100 @@ namespace ITSystem
         {
             _productService.ListProducts();
         }
+
+        private void CreateProduct()
+        {
+            Console.Clear();
+            Console.WriteLine("== Skapa produkt ==");
+
+            Console.Write("Namn: ");
+            var name = Console.ReadLine();
+
+            Console.Write("Beskrivning: ");
+            var description = Console.ReadLine();
+
+            Console.Write("Pris: ");
+            if (!decimal.TryParse(Console.ReadLine(), out var price))
+            {
+                Console.WriteLine("Ogiltigt pris.");
+                Pause();
+                return;
+            }
+
+            var product = new Product
+            {
+                Name = name,
+                Description = description,
+                Price = price
+            };
+
+            _productService.Create(product);
+            Console.WriteLine("Produkt skapad!");
+            Pause();
+        }
+
+        private void UpdateProduct()
+        {
+            Console.Clear();
+            Console.WriteLine("== Uppdatera produkt ==");
+            _productService.ListProducts();
+
+            Console.Write("Ange produkt-ID att uppdatera: ");
+            if (!int.TryParse(Console.ReadLine(), out var id))
+            {
+                Console.WriteLine("Ogiltigt ID.");
+                Pause();
+                return;
+            }
+
+            var product = _productService.GetById(id);
+            if (product == null)
+            {
+                Console.WriteLine("Produkt hittades inte.");
+                Pause();
+                return;
+            }
+
+            Console.Write($"Nytt namn ({product.Name}): ");
+            var name = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(name))
+                product.Name = name;
+
+            Console.Write($"Ny beskrivning ({product.Description}): ");
+            var description = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(description))
+                product.Description = description;
+
+            Console.Write($"Nytt pris ({product.Price:C}): ");
+            var priceInput = Console.ReadLine();
+            if (decimal.TryParse(priceInput, out var newPrice))
+                product.Price = newPrice;
+
+            _productService.Update(product);
+            Console.WriteLine("Produkt uppdaterad!");
+            Pause();
+        }
+
+        private void DeleteProduct()
+        {
+            Console.Clear();
+            Console.WriteLine("== Ta bort produkt ==");
+            _productService.ListProducts();
+
+            Console.Write("Ange produkt-ID att ta bort: ");
+            if (!int.TryParse(Console.ReadLine(), out var id))
+            {
+                Console.WriteLine("Ogiltigt ID.");
+                Pause();
+                return;
+            }
+
+            _productService.Delete(id);
+            Console.WriteLine("Produkt borttagen.");
+            Pause();
+        }
+
+
 
         private void CreateOrder()
         {
