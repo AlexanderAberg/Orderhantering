@@ -62,6 +62,52 @@ namespace ITSystem
                 UserMenu();
         }
 
+        private void OrderMenu(bool admin = false)
+        {
+            string? input;
+            do
+            {
+                Console.Clear();
+                Console.WriteLine("== Ordermeny ==");
+
+                Console.WriteLine("1. Lista ordrar");
+                Console.WriteLine("2. Skapa order");
+
+                if (admin)
+                {
+                    Console.WriteLine("3. Hantera alla ordrar");
+                }
+                else
+                {
+                    Console.WriteLine("3. Ändra/ta bort mina ordrar");
+                }
+
+                Console.WriteLine("0. Tillbaka");
+                Console.Write("Val: ");
+                input = Console.ReadLine();
+
+                switch (input)
+                {
+                    case "1":
+                        _orderService.ListOrdersByUser(currentUser.Id);
+                        break;
+
+                    case "2":
+                        _orderService.CreateOrder(currentUser.Id);
+                        break;
+
+                    case "3":
+                        if (admin)
+                            _orderService.ManageAllOrders(currentUser.Id);
+                        else
+                            _orderService.ModifyOrDeleteOwnOrder(currentUser.Id);
+                        break;
+                }
+
+            } while (input != "0");
+        }
+
+
         private void UserMenu()
         {
             string? input;
