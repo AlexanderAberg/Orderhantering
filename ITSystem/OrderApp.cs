@@ -62,6 +62,8 @@ namespace ITSystem
                 UserMenu();
         }
 
+       
+
         private void OrderMenu(bool admin = false)
         {
             string? input;
@@ -106,7 +108,6 @@ namespace ITSystem
 
             } while (input != "0");
         }
-
 
         private void UserMenu()
         {
@@ -210,6 +211,42 @@ namespace ITSystem
             }
         }
 
+        private void UserAdminMenu()
+        {
+            string? input;
+            do
+            {
+                Console.Clear();
+                Console.WriteLine("== Användarhantering (Admin) ==");
+
+                Console.WriteLine("1. Lista användare");
+                Console.WriteLine("2. Skapa ny användare");
+                Console.WriteLine("3. Uppdatera användare");
+                Console.WriteLine("4. Ta bort användare");
+                Console.WriteLine("0. Tillbaka");
+                Console.Write("Val: ");
+                input = Console.ReadLine();
+
+                switch (input)
+                {
+                    case "1":
+                        ListUsers();
+                        break;
+                    case "2":
+                        CreateUser();
+                        break;
+                    case "3":
+                        UpdateUser();
+                        break;
+                    case "4":
+                        DeleteUser();
+                        break;
+                }
+
+            } while (input != "0");
+        }
+
+
         private void ListProducts()
         {
             _productService.ListProducts();
@@ -273,7 +310,128 @@ namespace ITSystem
             }
         }
 
+        private void ListUsers()
+        {
+            Console.Clear();
+            Console.WriteLine("== Alla användare ==");
 
+            var users = _userService.GetAllUsers();
+
+            foreach (var user in users)
+            {
+                Console.WriteLine($"ID: {user.Id} | Användarnamn: {user.Username} | Roll: {user.Role}");
+            }
+
+            Pause();
+        }
+
+        private void CreateUser()
+        {
+            Console.Clear();
+            Console.WriteLine("== Skapa ny användare ==");
+
+            Console.Write("Användarnamn: ");
+            var username = Console.ReadLine();
+
+            Console.Write("Lösenord: ");
+            var password = ReadPassword();
+
+            Console.Write("Roll (User/Admin): ");
+            var role = Console.ReadLine();
+
+            if (role != "User" && role != "Admin")
+            {
+                Console.WriteLine("Ogiltig roll. Standard 'User' används.");
+                role = "User";
+            }
+
+            _userService.Register(username, password, role);
+
+            Console.WriteLine("Användare skapad!");
+            Pause();
+        }
+
+        private void UpdateUser()
+        {
+            Console.Clear();
+            Console.WriteLine("== Uppdatera användare ==");
+
+            ListUsers();
+
+            Console.Write("Ange ID på användare att uppdatera: ");
+            if (!int.TryParse(Console.ReadLine(), out int id))
+            {
+                Console.WriteLine("Ogiltigt ID.");
+                Pause();
+                return;
+            }
+
+            var user = _userService.GetUserById(id);
+            if (user == null)
+            {
+                Console.WriteLine("Användare hittades inte.");
+                Pause();
+                return;
+            }
+
+            Console.Write($"Nytt användarnamn ({user.Username}): ");
+            var newUsername = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(newUsername))
+                user.Username = newUsername;
+
+            Console.Write("Vill du ändra lösenord? (j/n): ");
+            var changePassword = Console.ReadLine()?.ToLower() == "j";
+            if (changePassword)
+            {
+                Console.Write("Nytt lösenord: ");
+                var newPassword = ReadPassword();
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            }
+
+            Console.Write($"Ny roll ({user.Role}) [User/Admin]: ");
+            var newRole = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(newRole) && (newRole == "User" || newRole == "Admin"))
+                user.Role = newRole;
+
+            _userService.UpdateUser(user);
+            Console.WriteLine("Användare uppdaterad!");
+            Pause();
+        }
+
+        private void DeleteUser()
+        {
+            Console.Clear();
+            Console.WriteLine("== Ta bort användare ==");
+
+            ListUsers();
+
+            Console.Write("Ange ID på användare att ta bort: ");
+            if (!int.TryParse(Console.ReadLine(), out int id))
+            {
+                Console.WriteLine("Ogiltigt ID.");
+                Pause();
+                return;
+            }
+
+            if (currentUser.Id == id)
+            {
+                Console.WriteLine("Du kan inte ta bort dig själv.");
+                Pause();
+                return;
+            }
+
+            var user = _userService.GetUserById(id);
+            if (user == null)
+            {
+                Console.WriteLine("Användare hittades inte.");
+                Pause();
+                return;
+            }
+
+            _userService.DeleteUser(id);
+            Console.WriteLine("Användare borttagen.");
+            Pause();
+        }
 
         private void Pause()
         {
