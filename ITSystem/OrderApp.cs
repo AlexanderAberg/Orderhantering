@@ -88,26 +88,43 @@ namespace ITSystem
                     case "1":
                         _productService.ListProducts();
                         break;
-
                     case "2":
-                        if (admin) CreateProduct();
+                        if (admin)
+                            CreateProduct();
+                        else
+                            Console.WriteLine("Endast administratörer kan skapa produkter.");
                         break;
-
                     case "3":
-                        if (admin) UpdateProduct();
+                        if (admin)
+                            UpdateProduct();
+                        else
+                            Console.WriteLine("Endast administratörer kan uppdatera produkter.");
                         break;
-
                     case "4":
-                        if (admin) DeleteProduct();
+                        if (admin)
+                            DeleteProduct();
+                        else
+                            Console.WriteLine("Endast administratörer kan ta bort produkter.");
+                        break;
+                    case "0":
                         break;
                     default:
-                        Console.WriteLine("Ogiltigt val.");
-                        Pause();
+                        Console.WriteLine("Ogiltigt val. Försök igen.");
                         break;
                 }
 
+                Pause();
+
             } while (input != "0");
         }
+
+
+        private void InvalidOption()
+        {
+            Console.WriteLine("Ogiltigt val.");
+            Pause();
+        }
+
 
         private void OrderMenu(bool admin = false)
         {
@@ -343,7 +360,7 @@ namespace ITSystem
                 Price = price
             };
 
-            _productService.Create(product);
+            _productService.CreateProduct(product);
             Console.WriteLine("Produkt skapad!");
             Pause();
         }
@@ -368,7 +385,7 @@ namespace ITSystem
                 return;
             }
 
-            var product = _productService.GetById(id);
+            var product = _productService.GetProductById(id);
             if (product == null)
             {
                 Console.WriteLine("Produkt hittades inte.");
@@ -391,7 +408,7 @@ namespace ITSystem
             if (decimal.TryParse(priceInput, out var newPrice))
                 product.Price = newPrice;
 
-            _productService.Update(product);
+            _productService.UpdateProduct(product);
             Console.WriteLine("Produkt uppdaterad!");
             Pause();
         }
@@ -416,7 +433,7 @@ namespace ITSystem
                 return;
             }
 
-            _productService.Delete(id);
+            _productService.DeleteProduct(id);
             Console.WriteLine("Produkt borttagen.");
             Pause();
         }
