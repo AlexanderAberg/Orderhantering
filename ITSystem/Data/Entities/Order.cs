@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ITSystem.Data.Entities
 {
-    internal class Order
+    public class Order
     {
         public int Id { get; set; }
         public int ProductId { get; set; }

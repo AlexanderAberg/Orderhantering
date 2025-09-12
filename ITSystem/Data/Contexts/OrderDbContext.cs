@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ITSystem.Data.Contexts
 {
-    internal class OrderDbContext : DbContext
+    public class OrderDbContext : DbContext
     {
         public DbSet<Product> Products { get; set; }
         public DbSet<Order> Orders { get; set; }
