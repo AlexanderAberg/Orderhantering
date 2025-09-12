@@ -105,7 +105,6 @@ namespace ITSystem
             } while (input != "0");
         }
 
-
         private void OrderMenu(bool admin = false)
         {
             string? input;
@@ -123,7 +122,7 @@ namespace ITSystem
                 }
                 else
                 {
-                    Console.WriteLine("3. Ändra/ta bort mina ordrar");
+                    Console.WriteLine("3. Ändra/Ta bort egna ordrar");
                 }
 
                 Console.WriteLine("0. Tillbaka");
@@ -134,17 +133,18 @@ namespace ITSystem
                 {
                     case "1":
                         _orderService.ListOrdersByUser(currentUser.Id);
+                        Pause();
                         break;
-
                     case "2":
                         _orderService.CreateOrder(currentUser.Id);
+                        Pause();
                         break;
-
                     case "3":
                         if (admin)
                             _orderService.ManageAllOrders(currentUser.Id);
                         else
                             _orderService.ModifyOrDeleteOwnOrder(currentUser.Id);
+                        Pause();
                         break;
                 }
 

@@ -57,70 +57,65 @@ namespace ITSystem.Services
         {
             var orders = _db.Orders
                 .Include(o => o.Product)
-                .Include(o => o.LastEditedByAdmin)
                 .Where(o => o.UserId == userId)
                 .ToList();
 
-            Console.WriteLine("== Dina ordrar ==");
-            foreach (var o in orders)
+            if (orders.Count == 0)
             {
-                string editedInfo = o.LastEditedByAdmin != null
-                    ? $"(Ändrad av admin: {o.LastEditedByAdmin.Username})"
-                    : "";
-                Console.WriteLine($"Order ID: {o.Id} | {o.Product.Name} | {o.OrderDate} | Status: {o.Status} {editedInfo}");
+                Console.WriteLine("Du har inga ordrar.");
+                return;
             }
 
-            Console.WriteLine("\nTryck på valfri tangent för att fortsätta...");
-            Console.ReadKey();
+            foreach (var order in orders)
+            {
+                Console.WriteLine($"Order ID: {order.Id} | Produkt: {order.Product.Name} | Status: {order.Status} | Datum: {order.OrderDate}");
+            }
         }
-
 
         public void CreateOrder(int userId)
         {
-            Console.Clear();
-            Console.WriteLine("== Skapa order ==");
-
             var products = _db.Products.ToList();
-            foreach (var product in products)
+
+            if (products.Count == 0)
             {
-                Console.WriteLine($"ID: {product.Id} | {product.Name} - {product.Description} ({product.Price:C})");
+                Console.WriteLine("Inga produkter tillgängliga.");
+                return;
             }
 
-            Console.Write("\nAnge produkt-ID: ");
-            if (int.TryParse(Console.ReadLine(), out int productId))
-            {
-                var product = _db.Products.Find(productId);
-                if (product != null)
-                {
-                    var order = new Order
-                    {
-                        ProductId = productId,
-                        UserId = userId,
-                        OrderDate = DateTime.Now,
-                        Status = "Pending"
-                    };
-                    _db.Orders.Add(order);
-                    _db.SaveChanges();
-                    Console.WriteLine("Order skapad!");
-                }
-                else
-                {
-                    Console.WriteLine("Produkt hittades inte.");
-                }
-            }
-            else
+            Console.WriteLine("== Tillgängliga produkter ==");
+            foreach (var p in products)
+                Console.WriteLine($"ID: {p.Id} | {p.Name} - {p.Price:C}");
+
+            Console.Write("Välj produkt-ID: ");
+            if (!int.TryParse(Console.ReadLine(), out int productId))
             {
                 Console.WriteLine("Ogiltigt ID.");
+                return;
             }
 
-            Console.WriteLine("\nTryck på valfri tangent för att fortsätta...");
-            Console.ReadKey();
-        }
+            var product = _db.Products.Find(productId);
+            if (product == null)
+            {
+                Console.WriteLine("Produkt hittades inte.");
+                return;
+            }
 
+            var order = new Order
+            {
+                ProductId = product.Id,
+                UserId = userId,
+                OrderDate = DateTime.Now,
+                Status = "Pending"
+            };
+
+            _db.Orders.Add(order);
+            _db.SaveChanges();
+
+            Console.WriteLine("Order skapad.");
+        }
 
         public void ModifyOrDeleteOwnOrder(int userId)
         {
-            Console.Clear();
             var orders = _db.Orders
                 .Include(o => o.Product)
                 .Where(o => o.UserId == userId)
@@ -128,107 +123,106 @@ namespace ITSystem.Services
 
             if (!orders.Any())
             {
-                Console.WriteLine("Inga ordrar hittades.");
+                Console.WriteLine("Inga ordrar att visa.");
                 return;
             }
 
-            foreach (var order in orders)
-            {
-                Console.WriteLine($"ID: {order.Id} | Produkt: {order.Product.Name} | Status: {order.Status}");
-            }
+            Console.WriteLine("== Dina ordrar ==");
+            foreach (var o in orders)
+                Console.WriteLine($"ID: {o.Id} | Produkt: {o.Product.Name} | Status: {o.Status}");
 
-            Console.Write("\nAnge order-ID du vill ändra eller ta bort: ");
-            if (int.TryParse(Console.ReadLine(), out int orderId))
-            {
-                var order = _db.Orders.FirstOrDefault(o => o.Id == orderId && o.UserId == userId);
-                if (order == null)
-                {
-                    Console.WriteLine("Order hittades inte.");
-                }
-                else
-                {
-                    Console.WriteLine("1. Ändra status");
-                    Console.WriteLine("2. Ta bort order");
-                    Console.Write("Val: ");
-                    var choice = Console.ReadLine();
-
-                    if (choice == "1")
-                    {
-                        Console.Write("Ny status: ");
-                        order.Status = Console.ReadLine();
-                        _db.SaveChanges();
-                        Console.WriteLine("Order uppdaterad.");
-                    }
-                    else if (choice == "2")
-                    {
-                        _db.Orders.Remove(order);
-                        _db.SaveChanges();
-                        Console.WriteLine("Order borttagen.");
-                    }
-                }
-            }
-            else
+            Console.Write("Ange order-ID du vill ändra/ta bort: ");
+            if (!int.TryParse(Console.ReadLine(), out int id))
             {
                 Console.WriteLine("Ogiltigt ID.");
+                return;
             }
 
-            Console.WriteLine("\nTryck på valfri tangent för att fortsätta...");
-            Console.ReadKey();
-        }
+            var order = orders.FirstOrDefault(o => o.Id == id);
+            if (order == null)
+            {
+                Console.WriteLine("Order hittades inte.");
+                return;
+            }
 
+            Console.WriteLine("1. Ändra status");
+            Console.WriteLine("2. Ta bort order");
+            Console.Write("Val: ");
+            var choice = Console.ReadLine();
+
+            if (choice == "1")
+            {
+                Console.Write("Ny status (Pending, Approved, Canceled): ");
+                var status = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    order.Status = status;
+                    _db.SaveChanges();
+                    Console.WriteLine("Order uppdaterad.");
+                }
+            }
+            else if (choice == "2")
+            {
+                _db.Orders.Remove(order);
+                _db.SaveChanges();
+                Console.WriteLine("Order borttagen.");
+            }
+        }
 
         public void ManageAllOrders(int adminId)
         {
-            Console.Clear();
             var orders = _db.Orders
                 .Include(o => o.Product)
                 .Include(o => o.User)
                 .ToList();
 
+            if (!orders.Any())
+            {
+                Console.WriteLine("Inga ordrar att visa.");
+                return;
+            }
+
+            Console.WriteLine("== Alla ordrar ==");
             foreach (var o in orders)
-            {
                 Console.WriteLine($"ID: {o.Id} | Användare: {o.User.Username} | Produkt: {o.Product.Name} | Status: {o.Status}");
-            }
 
-            Console.Write("\nAnge order-ID du vill ändra eller ta bort: ");
-            if (int.TryParse(Console.ReadLine(), out int orderId))
-            {
-                var order = _db.Orders.Include(o => o.User).FirstOrDefault(o => o.Id == orderId);
-                if (order == null)
-                {
-                    Console.WriteLine("Order hittades inte.");
-                }
-                else
-                {
-                    Console.WriteLine("1. Ändra status");
-                    Console.WriteLine("2. Ta bort order");
-                    Console.Write("Val: ");
-                    var choice = Console.ReadLine();
-
-                    if (choice == "1")
-                    {
-                        Console.Write("Ny status: ");
-                        order.Status = Console.ReadLine();
-                        order.LastEditedByAdminId = adminId;
-                        _db.SaveChanges();
-                        Console.WriteLine("Order uppdaterad av admin.");
-                    }
-                    else if (choice == "2")
-                    {
-                        _db.Orders.Remove(order);
-                        _db.SaveChanges();
-                        Console.WriteLine("Order borttagen av admin.");
-                    }
-                }
-            }
-            else
+            Console.Write("Ange order-ID att hantera: ");
+            if (!int.TryParse(Console.ReadLine(), out int id))
             {
                 Console.WriteLine("Ogiltigt ID.");
+                return;
             }
 
-            Console.WriteLine("\nTryck på valfri tangent för att fortsätta...");
-            Console.ReadKey();
-        }
+            var order = orders.FirstOrDefault(o => o.Id == id);
+            if (order == null)
+            {
+                Console.WriteLine("Order hittades inte.");
+                return;
+            }
 
+            Console.WriteLine("1. Ändra status");
+            Console.WriteLine("2. Ta bort order");
+            Console.Write("Val: ");
+            var choice = Console.ReadLine();
+
+            if (choice == "1")
+            {
+                Console.Write("Ny status (Pending, Approved, Canceled): ");
+                var status = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    order.Status = status;
+                    order.LastEditedByAdminId = adminId;
+                    _db.SaveChanges();
+                    Console.WriteLine("Order uppdaterad av admin.");
+                }
+            }
+            else if (choice == "2")
+            {
+                _db.Orders.Remove(order);
+                _db.SaveChanges();
+                Console.WriteLine("Order borttagen av admin.");
+            }
+        }
     }
 }
