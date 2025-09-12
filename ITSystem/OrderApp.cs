@@ -475,7 +475,7 @@ namespace ITSystem
             Console.Clear();
             Console.WriteLine("== Alla användare ==");
 
-            var users = _userService.GetAllUsers();
+            var users = _userService.GetAllUsers().OrderBy(u => u.Username);
 
             foreach (var user in users)
             {
@@ -496,6 +496,20 @@ namespace ITSystem
             Console.Write("Lösenord: ");
             var password = ReadPassword();
 
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            {
+                Console.WriteLine("Användarnamn och lösenord får inte vara tomma.");
+                Pause();
+                return;
+            }
+
+            if (_userService.GetAllUsers().Any(u => u.Username == username))
+            {
+                Console.WriteLine("Användarnamnet är redan taget.");
+                Pause();
+                return;
+            }
+
             Console.Write("Roll (User/Admin): ");
             var role = Console.ReadLine();
 
@@ -506,16 +520,22 @@ namespace ITSystem
             }
 
             _userService.Register(username, password, role);
-
             Console.WriteLine("Användare skapad!");
             Pause();
         }
 
+
         private void UpdateUser()
         {
+            if (currentUser.Role != "Admin")
+            {
+                Console.WriteLine("Du har inte behörighet att ändra andra användare.");
+                Pause();
+                return;
+            }
+
             Console.Clear();
             Console.WriteLine("== Uppdatera användare ==");
-
             ListUsers();
 
             Console.Write("Ange ID på användare att uppdatera: ");
@@ -534,13 +554,6 @@ namespace ITSystem
                 return;
             }
 
-            if (user.Id != currentUser.Id && currentUser.Role != "Admin")
-            {
-                Console.WriteLine("Du har inte behörighet att ändra denna användare.");
-                Pause();
-                return;
-            }
-
             Console.Write($"Nytt användarnamn ({user.Username}): ");
             var newUsername = Console.ReadLine();
             if (!string.IsNullOrWhiteSpace(newUsername))
@@ -555,20 +568,24 @@ namespace ITSystem
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
             }
 
-            if (currentUser.Role == "Admin")
+            Console.Write($"Ny roll ({user.Role}) [User/Admin]: ");
+            var newRole = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(newRole) && (newRole == "User" || newRole == "Admin"))
             {
-                Console.Write($"Ny roll ({user.Role}) [User/Admin]: ");
-                var newRole = Console.ReadLine();
-                if (!string.IsNullOrWhiteSpace(newRole) && (newRole == "User" || newRole == "Admin"))
+                if (user.Id == currentUser.Id && newRole != "Admin")
+                {
+                    Console.WriteLine("Du kan inte ändra din egen roll till 'User'.");
+                }
+                else
+                {
                     user.Role = newRole;
+                }
             }
 
             _userService.UpdateUser(user);
             Console.WriteLine("Användare uppdaterad!");
             Pause();
         }
-
-
 
         private void DeleteUser()
         {
@@ -606,10 +623,20 @@ namespace ITSystem
                 return;
             }
 
+            Console.Write($"Är du säker på att du vill ta bort användaren '{user.Username}'? (j/n): ");
+            var confirm = Console.ReadLine()?.ToLower();
+            if (confirm != "j")
+            {
+                Console.WriteLine("Borttagning avbruten.");
+                Pause();
+                return;
+            }
+
             _userService.DeleteUser(id);
             Console.WriteLine("Användare borttagen.");
             Pause();
         }
+
 
         private void Pause()
         {
