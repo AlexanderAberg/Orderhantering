@@ -28,6 +28,12 @@ namespace ITSystem.Services
 
         public void Register(string username, string password, string role)
         {
+            if (_db.Users.Any(u => u.Username == username))
+            {
+                Console.WriteLine("Användarnamnet är redan taget.");
+                return;
+            }
+
             var hash = BCrypt.Net.BCrypt.HashPassword(password);
             var user = new User { Username = username, PasswordHash = hash, Role = role };
             _db.Users.Add(user);

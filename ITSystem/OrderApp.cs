@@ -100,6 +100,10 @@ namespace ITSystem
                     case "4":
                         if (admin) DeleteProduct();
                         break;
+                    default:
+                        Console.WriteLine("Ogiltigt val.");
+                        Pause();
+                        break;
                 }
 
             } while (input != "0");
@@ -146,6 +150,10 @@ namespace ITSystem
                             _orderService.ModifyOrDeleteOwnOrder(currentUser.Id);
                         Pause();
                         break;
+                    default:
+                        Console.WriteLine("Ogiltigt val.");
+                        Pause();
+                        break;
                 }
 
             } while (input != "0");
@@ -179,6 +187,10 @@ namespace ITSystem
                         break;
                     case "3":
                         UserMenu();
+                        break;
+                    default:
+                        Console.WriteLine("Ogiltigt val.");
+                        Pause();
                         break;
                 }
 
@@ -220,14 +232,16 @@ namespace ITSystem
                     case "4":
                         UserMenu();
                         break;
+                    default:
+                        Console.WriteLine("Ogiltigt val.");
+                        Pause();
+                        break;
                 }
 
             } while (input != "0");
 
             currentUser = null;
         }
-
-
 
         private void LoginMenu()
         {
@@ -283,11 +297,14 @@ namespace ITSystem
                     case "4":
                         DeleteUser();
                         break;
+                    default:
+                        Console.WriteLine("Ogiltigt val.");
+                        Pause();
+                        break;
                 }
 
             } while (input != "0");
         }
-
 
         private void ListProducts()
         {
@@ -296,6 +313,12 @@ namespace ITSystem
 
         private void CreateProduct()
         {
+            if (currentUser.Role != "Admin")
+            {
+                Console.WriteLine("Du har inte behörighet att skapa produkt.");
+                return;
+            }
+
             Console.Clear();
             Console.WriteLine("== Skapa produkt ==");
 
@@ -327,6 +350,12 @@ namespace ITSystem
 
         private void UpdateProduct()
         {
+            if (currentUser.Role != "Admin")
+            {
+                Console.WriteLine("Du har inte behörighet att uppdatera produkt.");
+                return;
+            }
+
             Console.Clear();
             Console.WriteLine("== Uppdatera produkt ==");
             _productService.ListProducts();
@@ -369,6 +398,12 @@ namespace ITSystem
 
         private void DeleteProduct()
         {
+            if (currentUser.Role != "Admin")
+            {
+                Console.WriteLine("Du har inte behörighet att ta bort produkt.");
+                return;
+            }
+
             Console.Clear();
             Console.WriteLine("== Ta bort produkt ==");
             _productService.ListProducts();
@@ -386,8 +421,6 @@ namespace ITSystem
             Pause();
         }
 
-
-
         private void CreateOrder()
         {
             Console.Clear();
@@ -396,26 +429,17 @@ namespace ITSystem
             ListProducts();
 
             Console.Write("Ange produkt-ID: ");
-            if (int.TryParse(Console.ReadLine(), out int productId))
+            if (!int.TryParse(Console.ReadLine(), out int productId))
             {
-                var product = dbContext.Products.Find(productId);
-                if (product != null)
-                {
-                    var order = new Order
-                    {
-                        ProductId = productId,
-                        UserId = currentUser.Id,
-                        OrderDate = DateTime.Now,
-                        Status = "Pending"
-                    };
-                    dbContext.Orders.Add(order);
-                    dbContext.SaveChanges();
-                    Console.WriteLine("Order skapad!");
-                }
-                else
-                {
-                    Console.WriteLine("Produkt hittades inte.");
-                }
+                Console.WriteLine("Ogiltigt ID.");
+                return;
+            }
+
+            var product = dbContext.Products.FirstOrDefault(p => p.Id == productId);
+            if (product == null)
+            {
+                Console.WriteLine("Produkten hittades inte.");
+                return;
             }
             else
             {
@@ -510,6 +534,13 @@ namespace ITSystem
                 return;
             }
 
+            if (user.Id != currentUser.Id && currentUser.Role != "Admin")
+            {
+                Console.WriteLine("Du har inte behörighet att ändra denna användare.");
+                Pause();
+                return;
+            }
+
             Console.Write($"Nytt användarnamn ({user.Username}): ");
             var newUsername = Console.ReadLine();
             if (!string.IsNullOrWhiteSpace(newUsername))
@@ -524,18 +555,29 @@ namespace ITSystem
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
             }
 
-            Console.Write($"Ny roll ({user.Role}) [User/Admin]: ");
-            var newRole = Console.ReadLine();
-            if (!string.IsNullOrWhiteSpace(newRole) && (newRole == "User" || newRole == "Admin"))
-                user.Role = newRole;
+            if (currentUser.Role == "Admin")
+            {
+                Console.Write($"Ny roll ({user.Role}) [User/Admin]: ");
+                var newRole = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(newRole) && (newRole == "User" || newRole == "Admin"))
+                    user.Role = newRole;
+            }
 
             _userService.UpdateUser(user);
             Console.WriteLine("Användare uppdaterad!");
             Pause();
         }
 
+
+
         private void DeleteUser()
         {
+            if (currentUser.Role != "Admin")
+            {
+                Console.WriteLine("Du har inte behörighet att ta bort andra användare.");
+                return;
+            }
+
             Console.Clear();
             Console.WriteLine("== Ta bort användare ==");
 

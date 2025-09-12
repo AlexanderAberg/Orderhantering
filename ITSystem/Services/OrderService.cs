@@ -118,6 +118,7 @@ namespace ITSystem.Services
         {
             var orders = _db.Orders
                 .Include(o => o.Product)
+                .Include(o => o.User)
                 .Where(o => o.UserId == userId)
                 .ToList();
 
@@ -138,10 +139,13 @@ namespace ITSystem.Services
                 return;
             }
 
-            var order = orders.FirstOrDefault(o => o.Id == id);
+            var order = _db.Orders
+                .Include(o => o.Product)
+                .FirstOrDefault(o => o.Id == id && o.UserId == userId);
+
             if (order == null)
             {
-                Console.WriteLine("Order hittades inte.");
+                Console.WriteLine("Du har inte behörighet att hantera denna order eller den finns inte.");
                 return;
             }
 
@@ -157,6 +161,9 @@ namespace ITSystem.Services
                 if (!string.IsNullOrWhiteSpace(status))
                 {
                     order.Status = status;
+
+                    order.LastEditedByAdminId = null;
+
                     _db.SaveChanges();
                     Console.WriteLine("Order uppdaterad.");
                 }
@@ -169,11 +176,13 @@ namespace ITSystem.Services
             }
         }
 
+
         public void ManageAllOrders(int adminId)
         {
             var orders = _db.Orders
                 .Include(o => o.Product)
                 .Include(o => o.User)
+                .Include(o => o.LastEditedByAdmin)
                 .ToList();
 
             if (!orders.Any())
@@ -184,7 +193,10 @@ namespace ITSystem.Services
 
             Console.WriteLine("== Alla ordrar ==");
             foreach (var o in orders)
-                Console.WriteLine($"ID: {o.Id} | Användare: {o.User.Username} | Produkt: {o.Product.Name} | Status: {o.Status}");
+            {
+                string editedBy = o.LastEditedByAdmin != null ? $" | Senast ändrad av: {o.LastEditedByAdmin.Username}" : "";
+                Console.WriteLine($"ID: {o.Id} | Användare: {o.User.Username} | Produkt: {o.Product.Name} | Status: {o.Status}{editedBy}");
+            }
 
             Console.Write("Ange order-ID att hantera: ");
             if (!int.TryParse(Console.ReadLine(), out int id))
