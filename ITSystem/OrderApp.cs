@@ -29,7 +29,7 @@ namespace ITSystem
 
         internal void Init()
         {
-            dbContext.Database.EnsureCreated();
+            dbContext.Database.Migrate();
 
             if (!dbContext.Products.Any())
             {
