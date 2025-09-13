@@ -291,11 +291,11 @@ namespace ITSystem
             {
                 Console.Clear();
                 Console.WriteLine("== Användarhantering (Admin) ==");
-
                 Console.WriteLine("1. Lista användare");
                 Console.WriteLine("2. Skapa ny användare");
                 Console.WriteLine("3. Uppdatera användare");
-                Console.WriteLine("4. Ta bort användare");
+                Console.WriteLine("4. Min profil");
+                Console.WriteLine("5. Ta bort användare");
                 Console.WriteLine("0. Tillbaka");
                 Console.Write("Val: ");
                 input = Console.ReadLine();
@@ -312,6 +312,9 @@ namespace ITSystem
                         UpdateUser();
                         break;
                     case "4":
+                        MyProfileMenu();
+                        break;
+                    case "5":
                         DeleteUser();
                         break;
                     default:
@@ -322,6 +325,45 @@ namespace ITSystem
 
             } while (input != "0");
         }
+
+        private void MyProfileMenu()
+        {
+            string? input;
+            do
+            {
+                Console.Clear();
+                Console.WriteLine("== Min profil ==");
+                Console.WriteLine($"Användarnamn: {currentUser.Username}");
+                Console.WriteLine($"Roll: {currentUser.Role}");
+                Console.WriteLine();
+                Console.WriteLine("1. Ändra användarnamn");
+                Console.WriteLine("2. Ändra lösenord");
+                Console.WriteLine("3. Min profil");
+                Console.WriteLine("0. Tillbaka");
+                Console.Write("Val: ");
+                input = Console.ReadLine();
+
+                switch (input)
+                {
+                    case "1":
+                        ChangeUsername();
+                        break;
+                    case "2":
+                        ChangePassword();
+                        break;
+                    case "3":
+                        MyProfileMenu();
+                        break;
+                    case "0":
+                        break;
+                    default:
+                        InvalidOption();
+                        break;
+                }
+
+            } while (input != "0");
+        }
+
 
         private void ListProducts()
         {
@@ -651,6 +693,44 @@ namespace ITSystem
 
             _userService.DeleteUser(id);
             Console.WriteLine("Användare borttagen.");
+            Pause();
+        }
+
+        private void ChangeUsername()
+        {
+            Console.Write("Nytt användarnamn: ");
+            var newUsername = Console.ReadLine();
+
+            if (!string.IsNullOrWhiteSpace(newUsername))
+            {
+                currentUser.Username = newUsername;
+                _userService.UpdateUser(currentUser);
+                Console.WriteLine("Användarnamn uppdaterat.");
+            }
+            else
+            {
+                Console.WriteLine("Ogiltigt användarnamn.");
+            }
+
+            Pause();
+        }
+
+        private void ChangePassword()
+        {
+            Console.Write("Nytt lösenord: ");
+            var newPassword = ReadPassword();
+
+            if (!string.IsNullOrWhiteSpace(newPassword))
+            {
+                currentUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                _userService.UpdateUser(currentUser);
+                Console.WriteLine("Lösenord uppdaterat.");
+            }
+            else
+            {
+                Console.WriteLine("Ogiltigt lösenord.");
+            }
+
             Pause();
         }
 
