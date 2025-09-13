@@ -113,8 +113,6 @@ namespace ITSystem
                         break;
                 }
 
-                Pause();
-
             } while (input != "0");
         }
 
@@ -133,7 +131,6 @@ namespace ITSystem
             {
                 Console.Clear();
                 Console.WriteLine("== Ordermeny ==");
-
                 Console.WriteLine("1. Lista ordrar");
                 Console.WriteLine("2. Skapa order");
 
@@ -154,27 +151,26 @@ namespace ITSystem
                 {
                     case "1":
                         _orderService.ListOrdersByUser(currentUser.Id);
-                        Pause();
                         break;
                     case "2":
                         _orderService.CreateOrder(currentUser.Id);
-                        Pause();
                         break;
                     case "3":
                         if (admin)
                             _orderService.ManageAllOrders(currentUser.Id);
                         else
                             _orderService.ModifyOrDeleteOwnOrder(currentUser.Id);
-                        Pause();
+                        break;
+                    case "0":
                         break;
                     default:
                         Console.WriteLine("Ogiltigt val.");
-                        Pause();
                         break;
                 }
 
             } while (input != "0");
         }
+
 
         private void UserMenu()
         {
@@ -182,11 +178,7 @@ namespace ITSystem
             do
             {
                 Console.Clear();
-                if (currentUser != null)
-                    Console.WriteLine($"Inloggad som: {currentUser.Username} (User)");
-                else
-                    Console.WriteLine("Inloggad som: (User)");
-
+                Console.WriteLine($"Inloggad som: {currentUser?.Username} (User)");
                 Console.WriteLine("1. Produkter");
                 Console.WriteLine("2. Ordrar");
                 Console.WriteLine("3. Min profil");
@@ -203,18 +195,19 @@ namespace ITSystem
                         OrderMenu();
                         break;
                     case "3":
-                        UserMenu();
+                        MyProfileMenu();
+                        break;
+                    case "0":
+                        Logout();
                         break;
                     default:
                         Console.WriteLine("Ogiltigt val.");
-                        Pause();
                         break;
                 }
 
             } while (input != "0");
-
-            currentUser = null;
         }
+
 
         private void AdminMenu()
         {
@@ -222,11 +215,7 @@ namespace ITSystem
             do
             {
                 Console.Clear();
-                if (currentUser != null)
-                    Console.WriteLine($"Inloggad som: {currentUser.Username} (Admin)");
-                else
-                    Console.WriteLine("Inloggad som: (Admin)");
-
+                Console.WriteLine($"Inloggad som: {currentUser?.Username} (Admin)");
                 Console.WriteLine("1. Produkter");
                 Console.WriteLine("2. Ordrar");
                 Console.WriteLine("3. Användare");
@@ -247,18 +236,19 @@ namespace ITSystem
                         UserAdminMenu();
                         break;
                     case "4":
-                        UserMenu();
+                        MyProfileMenu();
+                        break;
+                    case "0":
+                        Logout();
                         break;
                     default:
                         Console.WriteLine("Ogiltigt val.");
-                        Pause();
                         break;
                 }
 
             } while (input != "0");
-
-            currentUser = null;
         }
+
 
         private void LoginMenu()
         {
@@ -269,8 +259,8 @@ namespace ITSystem
             var username = Console.ReadLine();
             Console.Write("Lösenord: ");
             var password = ReadPassword();
-
             var user = dbContext.Users.FirstOrDefault(u => u.Username == username);
+
             if (user != null && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
                 currentUser = user;
@@ -283,6 +273,7 @@ namespace ITSystem
                 Thread.Sleep(1500);
             }
         }
+
 
         private void UserAdminMenu()
         {
@@ -317,14 +308,16 @@ namespace ITSystem
                     case "5":
                         DeleteUser();
                         break;
+                    case "0":
+                        break;
                     default:
                         Console.WriteLine("Ogiltigt val.");
-                        Pause();
                         break;
                 }
 
             } while (input != "0");
         }
+
 
         private void MyProfileMenu()
         {
@@ -338,7 +331,6 @@ namespace ITSystem
                 Console.WriteLine();
                 Console.WriteLine("1. Ändra användarnamn");
                 Console.WriteLine("2. Ändra lösenord");
-                Console.WriteLine("3. Min profil");
                 Console.WriteLine("0. Tillbaka");
                 Console.Write("Val: ");
                 input = Console.ReadLine();
@@ -351,9 +343,6 @@ namespace ITSystem
                     case "2":
                         ChangePassword();
                         break;
-                    case "3":
-                        MyProfileMenu();
-                        break;
                     case "0":
                         break;
                     default:
@@ -362,12 +351,6 @@ namespace ITSystem
                 }
 
             } while (input != "0");
-        }
-
-
-        private void ListProducts()
-        {
-            _productService.ListProducts();
         }
 
         private void CreateProduct()
@@ -478,55 +461,6 @@ namespace ITSystem
             _productService.DeleteProduct(id);
             Console.WriteLine("Produkt borttagen.");
             Pause();
-        }
-
-        private void CreateOrder()
-        {
-            Console.Clear();
-            Console.WriteLine("== Skapa order ==");
-
-            ListProducts();
-
-            Console.Write("Ange produkt-ID: ");
-            if (!int.TryParse(Console.ReadLine(), out int productId))
-            {
-                Console.WriteLine("Ogiltigt ID.");
-                return;
-            }
-
-            var product = dbContext.Products.FirstOrDefault(p => p.Id == productId);
-            if (product == null)
-            {
-                Console.WriteLine("Produkten hittades inte.");
-                return;
-            }
-            else
-            {
-                Console.WriteLine("Ogiltigt ID.");
-            }
-
-            Pause();
-        }
-
-        private void ListOrders()
-        {
-            Console.Clear();
-            Console.WriteLine("== Dina ordrar ==");
-
-            var orders = dbContext.Orders
-                .Where(o => o.UserId == currentUser.Id)
-                .Include(o => o.Product)
-                .Include(o => o.LastEditedByAdmin)
-                .ToList();
-
-            foreach (var o in orders)
-            {
-                string editedInfo = o.LastEditedByAdmin != null
-                    ? $"(Ändrad av admin: {o.LastEditedByAdmin.Username})"
-                    : "";
-
-                Console.WriteLine($"Order ID: {o.Id} | {o.Product.Name} | {o.OrderDate} | Status: {o.Status} {editedInfo}");
-            }
         }
 
         private void ListUsers()
@@ -765,6 +699,13 @@ namespace ITSystem
 
             Console.WriteLine();
             return password;
+        }
+
+        private void Logout()
+        {
+            currentUser = null;
+            Console.WriteLine("Du är nu utloggad.");
+            Pause();
         }
     }
 }
