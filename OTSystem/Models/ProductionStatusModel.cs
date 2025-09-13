@@ -1,0 +1,9 @@
+﻿namespace OTSystem.Models
+{
+    public class ProductionStatusModel
+    {
+        public int OrderId { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; } = DateTime.Now;
+    }
+}
