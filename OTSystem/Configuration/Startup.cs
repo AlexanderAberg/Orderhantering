@@ -11,7 +11,6 @@ namespace OTSystem.Configuration
     public class Startup
     {
         public IConfiguration Configuration { get; }
-
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -32,15 +31,15 @@ namespace OTSystem.Configuration
 
         public void Configure(WebApplication app, IWebHostEnvironment env)
         {
-            app.UseMiddleware<AuthMiddleware>();
-            app.UseMiddleware<ErrorHandlingMiddleware>();
-            app.UseMiddleware<ApiKeyMiddleware>();
-
             if (env.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseMiddleware<AuthMiddleware>();
+            app.UseMiddleware<ErrorHandlingMiddleware>();
+            app.UseMiddleware<ApiKeyMiddleware>();
 
             app.UseHttpsRedirection();
 
