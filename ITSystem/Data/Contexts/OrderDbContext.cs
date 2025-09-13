@@ -2,18 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ITSystem.Data.Contexts
 {
     public class OrderDbContext : DbContext
     {
-        public DbSet<Product> Products { get; set; }
-        public DbSet<Order> Orders { get; set; }
-        public DbSet<User> Users { get; set; }
+        public DbSet<Product> Products { get; set; } = null!;
+        public DbSet<Order> Orders { get; set; } = null!;
+        public DbSet<User> Users { get; set; } = null!;
+
         public OrderDbContext(DbContextOptions<OrderDbContext> options) : base(options) { }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -35,7 +32,12 @@ namespace ITSystem.Data.Contexts
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
-        }
 
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.LastEditedByAdmin)
+                .WithMany(u => u.EditedOrders)
+                .HasForeignKey(o => o.LastEditedByAdminId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
     }
 }
