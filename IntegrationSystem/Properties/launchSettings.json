@@ -1,12 +1,12 @@
 {
     "profiles": {
-        "OTSystem": {
+        "IntegrationSystem": {
             "commandName": "Project",
             "launchBrowser": true,
+            "applicationUrl": "http://localhost:5000;https://localhost:5001",
             "environmentVariables": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
-            },
-            "applicationUrl": "https://localhost:55207;http://localhost:55208"
+            }
         }
     }
 }

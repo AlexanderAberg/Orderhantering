@@ -1,12 +1,12 @@
 {
     "profiles": {
-        "OTSystem": {
+        "ITSystem": {
             "commandName": "Project",
             "launchBrowser": true,
             "environmentVariables": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },
-            "applicationUrl": "https://localhost:55207;http://localhost:55208"
+            "applicationUrl": "https://localhost:5003;http://localhost:5002"
         }
     }
 }

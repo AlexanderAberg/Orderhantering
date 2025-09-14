@@ -68,7 +68,7 @@ namespace ITSystem.Services
 
             foreach (var order in orders)
             {
-                Console.WriteLine($"Order ID: {order.Id} | Produkt: {order.Product.Name} | Status: {order.Status} | Datum: {order.OrderDate}");
+                Console.WriteLine($"Order ID: {order.Id} | Produkt: {order.Product.Name} | Status: {order.Status} | Datum: {order.OrderDate} | Antal {order.Quantity}");
             }
         }
 
@@ -100,12 +100,20 @@ namespace ITSystem.Services
                 return;
             }
 
+            Console.Write("Ange antal: ");
+            if (!int.TryParse(Console.ReadLine(), out int quantity) || quantity <= 0)
+            {
+                Console.WriteLine("Ogiltigt antal.");
+                return;
+            }
+
             var order = new Order
             {
                 ProductId = product.Id,
                 UserId = userId,
                 OrderDate = DateTime.Now,
-                Status = "Pending"
+                Status = "Pending",
+                Quantity = quantity
             };
 
             _db.Orders.Add(order);
@@ -114,11 +122,16 @@ namespace ITSystem.Services
             Console.WriteLine("Order skapad.");
         }
 
+
         public void ModifyOrDeleteOwnOrder(int userId)
         {
             var orders = _db.Orders
                 .Include(o => o.Product)
                 .Include(o => o.User)
+                .Include(o => o.LastEditedByAdmin)
+                .Include(o => o.OrderDate)
+                .Include(o => o.Status)
+                .Include(o => o.Quantity)
                 .Where(o => o.UserId == userId)
                 .ToList();
 
@@ -130,7 +143,7 @@ namespace ITSystem.Services
 
             Console.WriteLine("== Dina ordrar ==");
             foreach (var o in orders)
-                Console.WriteLine($"ID: {o.Id} | Produkt: {o.Product.Name} | Status: {o.Status}");
+                Console.WriteLine($"ID: {o.Id} | Produkt: {o.Product.Name} | Status: {o.Status} | Antal: {o.Quantity}");
 
             Console.Write("Ange order-ID du vill ändra/ta bort: ");
             if (!int.TryParse(Console.ReadLine(), out int id))
@@ -195,7 +208,7 @@ namespace ITSystem.Services
             foreach (var o in orders)
             {
                 string editedBy = o.LastEditedByAdmin != null ? $" | Senast ändrad av: {o.LastEditedByAdmin.Username}" : "";
-                Console.WriteLine($"ID: {o.Id} | Användare: {o.User.Username} | Produkt: {o.Product.Name} | Status: {o.Status}{editedBy}");
+                Console.WriteLine($"ID: {o.Id} | Användare: {o.User.Username} | Produkt: {o.Product.Name} | Status: {o.Status}{editedBy} | Antal: {o.Quantity}");
             }
 
             Console.Write("Ange order-ID att hantera: ");
