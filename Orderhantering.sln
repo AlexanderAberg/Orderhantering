@@ -9,6 +9,21 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OTSystem", "OTSystem\OTSyst
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationSystem", "IntegrationSystem\IntegrationSystem.csproj", "{5794B4F8-DEB2-40CF-B2FB-FF4C81327F27}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infrastructure", "infrastructure", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+		prometheus.yml = prometheus.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "grafana", "grafana", "{FF7CC8B4-BAA8-4DBE-AA7B-C4734B2EE54C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "provisioning", "provisioning", "{E9EFB2FC-F431-4FCC-A6EE-740CF8AADD07}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "datasources", "datasources", "{C5FF6D35-E632-46AF-95AF-3DBE053E1FEB}"
+	ProjectSection(SolutionItems) = preProject
+		datasource.yml = datasource.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,6 +45,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FF7CC8B4-BAA8-4DBE-AA7B-C4734B2EE54C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{E9EFB2FC-F431-4FCC-A6EE-740CF8AADD07} = {FF7CC8B4-BAA8-4DBE-AA7B-C4734B2EE54C}
+		{C5FF6D35-E632-46AF-95AF-3DBE053E1FEB} = {E9EFB2FC-F431-4FCC-A6EE-740CF8AADD07}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2A58EDBC-C215-4783-AB95-05427C6C09DB}

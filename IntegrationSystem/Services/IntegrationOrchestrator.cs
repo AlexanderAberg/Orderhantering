@@ -8,12 +8,18 @@ namespace IntegrationSystem.Services
     {
         private readonly ITIntegrationService _itService;
         private readonly OTIntegrationService _otService;
+        private readonly MetricsService _metricsService;
         private readonly ILogger<IntegrationOrchestrator> _logger;
 
-        public IntegrationOrchestrator(ITIntegrationService itService, OTIntegrationService otService, ILogger<IntegrationOrchestrator> logger)
+        public IntegrationOrchestrator(
+            ITIntegrationService itService,
+            OTIntegrationService otService,
+            MetricsService metricsService,
+            ILogger<IntegrationOrchestrator> logger)
         {
             _itService = itService;
             _otService = otService;
+            _metricsService = metricsService;
             _logger = logger;
         }
 
@@ -23,6 +29,8 @@ namespace IntegrationSystem.Services
 
             await _itService.SendOrderAsync(order);
             await _otService.WriteOrderToModbusAsync(order.Id, order.Quantity);
+
+            _metricsService.IncrementOrdersProcessed();
 
             _logger.LogInformation("Integration slutförd: order skickad till IT och OT");
         }

@@ -28,6 +28,7 @@ namespace IntegrationSystem.Configuration
             services.AddSingleton<OTIntegrationService>();
             services.AddScoped<ITIntegrationService>();
             services.AddScoped<IntegrationOrchestrator>();
+            services.AddSingleton<MetricsService>();
 
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
