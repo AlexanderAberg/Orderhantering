@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Prometheus;  
 
 namespace IntegrationSystem.Configuration
 {
@@ -21,14 +22,12 @@ namespace IntegrationSystem.Configuration
 
         public void ConfigureServices(IServiceCollection services)
         {
-           
             services.Configure<ApiSettings>(Configuration.GetSection("ApiSettings"));
 
-            
-            services.AddHttpClient();  
-            services.AddSingleton<OTIntegrationService>();  
-            services.AddScoped<ITIntegrationService>();     
-            services.AddScoped<IntegrationOrchestrator>();  
+            services.AddHttpClient();
+            services.AddSingleton<OTIntegrationService>();
+            services.AddScoped<ITIntegrationService>();
+            services.AddScoped<IntegrationOrchestrator>();
 
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
@@ -42,9 +41,13 @@ namespace IntegrationSystem.Configuration
                 app.UseSwaggerUI();
             }
 
+            app.UseHttpMetrics();
+
             app.UseMiddleware<ApiKeyMiddleware>();
 
             app.UseHttpsRedirection();
+
+            app.MapMetrics();
 
             app.MapPost("/api/integrate/order", async (OrderModel order, IntegrationOrchestrator orchestrator) =>
             {
