@@ -19,13 +19,12 @@ namespace IntegrationSystem.Services
 
         public async Task ProcessOrderAsync(OrderModel order)
         {
-            _logger.LogInformation("Startar integration för order...");
+            _logger.LogInformation("Startar integration: order till IT och OT");
 
             await _itService.SendOrderAsync(order);
+            await _otService.WriteOrderToModbusAsync(order.Id, order.Quantity);
 
-            await _otService.WriteOrderToModbusAsync();
-
-            _logger.LogInformation("Order integrerad mellan IT och OT.");
+            _logger.LogInformation("Integration slutförd: order skickad till IT och OT");
         }
 
         public object GetStatus()
