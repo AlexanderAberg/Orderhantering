@@ -3,11 +3,10 @@ using IntegrationSystem.Models;
 using IntegrationSystem.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Prometheus;  
+using Prometheus;
 
 namespace IntegrationSystem.Configuration
 {
@@ -30,6 +29,8 @@ namespace IntegrationSystem.Configuration
             services.AddScoped<IntegrationOrchestrator>();
             services.AddSingleton<MetricsService>();
 
+            services.AddControllers();
+
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
         }
@@ -49,24 +50,12 @@ namespace IntegrationSystem.Configuration
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.MapControllers();
+
             app.MapMetrics();
-
-            app.MapPost("/api/integrate/order", async (OrderModel order, IntegrationOrchestrator orchestrator) =>
-            {
-                if (string.IsNullOrWhiteSpace(order.ProductName) || order.Quantity <= 0)
-                    return Results.BadRequest(new { message = "Ogiltigt orderdata." });
-
-                await orchestrator.ProcessOrderAsync(order);
-                return Results.Ok(new { message = "Order integrerad och processad." });
-            });
-
-            app.MapGet("/api/integrate/status", (IntegrationOrchestrator orchestrator) =>
-            {
-                var status = orchestrator.GetStatus();
-                return Results.Ok(status);
-            });
         }
-
-
     }
 }

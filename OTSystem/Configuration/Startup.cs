@@ -42,10 +42,17 @@ namespace OTSystem.Configuration
             app.UseHttpMetrics();
 
             app.UseMiddleware<ApiKeyMiddleware>();
-
             app.UseMiddleware<ErrorHandlingMiddleware>();
 
             app.UseHttpsRedirection();
+
+            var modbusServer = app.Services.GetRequiredService<IndustrialControlSystem>();
+            modbusServer.Run();
+
+            app.Lifetime.ApplicationStopping.Register(() =>
+            {
+                modbusServer.StopAsync().GetAwaiter().GetResult();
+            });
 
             app.MapPost("/api/orders/start", async (OrderModel order, ProductionLineService productionService) =>
             {
@@ -64,5 +71,6 @@ namespace OTSystem.Configuration
                 return Results.Ok(status);
             });
         }
+
     }
 }
