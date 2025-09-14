@@ -1,0 +1,14 @@
+{
+    "title": "Integration Overview",
+    "panels": [
+        {
+            "type": "stat",
+            "title": "Totalt antal ordrar",
+            "targets": [
+                {
+                    "expr": "integration_orders_processed_total"
+                }
+            ]
+        }
+    ]
+}
