@@ -34,7 +34,7 @@ namespace OTSystem.Middleware
             if (!context.Request.Headers.TryGetValue(APIKEYNAME, out var extractedApiKey))
             {
                 _logger.LogWarning("API key missing.");
-                context.Response.StatusCode = 401;
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await context.Response.WriteAsync("API-nyckel saknas.");
                 return;
             }
@@ -42,7 +42,7 @@ namespace OTSystem.Middleware
             if (!_apiKey.Equals(extractedApiKey))
             {
                 _logger.LogWarning("Invalid API key.");
-                context.Response.StatusCode = 403;
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await context.Response.WriteAsync("Ogiltig API-nyckel.");
                 return;
             }

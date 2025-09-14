@@ -41,10 +41,9 @@ namespace OTSystem.Configuration
             app.UseMetricServer();
             app.UseHttpMetrics();
 
-            app.UseMiddleware<AuthMiddleware>();
-            app.UseMiddleware<ErrorHandlingMiddleware>();
-
             app.UseMiddleware<ApiKeyMiddleware>();
+
+            app.UseMiddleware<ErrorHandlingMiddleware>();
 
             app.UseHttpsRedirection();
 
