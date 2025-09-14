@@ -1,9 +1,8 @@
-﻿namespace IntegrationSystem.Models
+﻿namespace IntegrationSystem.Models;
+public class OrderModel
 {
-    public class OrderModel
-    {
-        public int Id { get; set; }
-        public string ProductName { get; set; } = "";
-        public int Quantity { get; set; }
-    }
+    public int Id { get; set; }
+    public string ProductName { get; set; } = "";
+    public int Quantity { get; set; }
+    public string Status { get; set; } = "";
 }

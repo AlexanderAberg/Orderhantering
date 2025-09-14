@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+﻿using ITSystem.Data.Entities;
 using IntegrationSystem.Models;
 using Microsoft.Extensions.Logging;
 
@@ -23,6 +23,13 @@ namespace IntegrationSystem.Services
             _logger = logger;
         }
 
+        public async Task ProcessOrderAsync(Order itOrder)
+        {
+            var integrationOrder = MapFromItOrder(itOrder);
+
+            await ProcessOrderAsync(integrationOrder);
+        }
+
         public async Task ProcessOrderAsync(OrderModel order)
         {
             _logger.LogInformation("Startar integration: order till IT och OT");
@@ -36,9 +43,20 @@ namespace IntegrationSystem.Services
             });
 
             _metrics.IncrementOrdersProcessed();
-            _metrics.SetCurrentActiveOrders(0);           
+            _metrics.SetCurrentActiveOrders(0);
 
             _logger.LogInformation("Integration slutförd: order skickad till IT och OT");
+        }
+
+        
+        private OrderModel MapFromItOrder(Order order)
+        {
+            return new OrderModel
+            {
+                Id = order.Id,
+                ProductName = order.Product?.Name ?? "Unknown",
+                Quantity = order.Quantity,
+            };
         }
 
         public object GetStatus()
