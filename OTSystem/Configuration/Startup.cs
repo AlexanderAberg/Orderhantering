@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Prometheus;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -37,8 +38,12 @@ namespace OTSystem.Configuration
                 app.UseSwaggerUI();
             }
 
+            app.UseMetricServer();
+            app.UseHttpMetrics();
+
             app.UseMiddleware<AuthMiddleware>();
             app.UseMiddleware<ErrorHandlingMiddleware>();
+
             app.UseMiddleware<ApiKeyMiddleware>();
 
             app.UseHttpsRedirection();

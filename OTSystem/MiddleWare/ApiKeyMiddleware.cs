@@ -23,9 +23,10 @@ namespace OTSystem.Middleware
         {
             _logger.LogInformation("Request path: " + context.Request.Path);
 
-            if (context.Request.Path.StartsWithSegments("/swagger", System.StringComparison.OrdinalIgnoreCase))
+            if (context.Request.Path.StartsWithSegments("/swagger", System.StringComparison.OrdinalIgnoreCase) ||
+                context.Request.Path.StartsWithSegments("/metrics", System.StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogInformation("Swagger endpoint accessed, skipping API key check.");
+                _logger.LogInformation("Swagger or metrics endpoint accessed, skipping API key check.");
                 await _next(context);
                 return;
             }

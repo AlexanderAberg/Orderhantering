@@ -42,6 +42,7 @@ namespace IntegrationSystem.Configuration
                 app.UseSwaggerUI();
             }
 
+            app.UseMetricServer();
             app.UseHttpMetrics();
 
             app.UseMiddleware<ApiKeyMiddleware>();
@@ -65,5 +66,7 @@ namespace IntegrationSystem.Configuration
                 return Results.Ok(status);
             });
         }
+
+
     }
 }
