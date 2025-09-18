@@ -364,3 +364,14 @@ FodyWeavers.xsd
 /OTSystem/appsettings.json
 /IntegrationSystem/appsettings.json
 /IntegrationSystem/appsettings.json
+<<<<<<< Updated upstream
+=======
+/prometheus.yml
+/prometheus.yml
+/.gitignore
+>>>>>>> Stashed changes
+/prometheus.yml
+/IntegrationSystem/Properties/launchSettings.json
+/IntegrationSystem/Properties/launchSettings.json
+/ITSystem/appsettings.json
+/prometheus.yml
