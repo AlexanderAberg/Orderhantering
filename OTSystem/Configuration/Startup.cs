@@ -91,6 +91,5 @@ namespace OTSystem.Configuration
                 return Results.Ok(new { message = "Test Jira issue attempted" });
             });
         }
-
     }
 }
