@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 using Prometheus;
 
 namespace IntegrationSystem.Configuration
@@ -21,6 +22,9 @@ namespace IntegrationSystem.Configuration
 
         public void ConfigureServices(IServiceCollection services)
         {
+            var key = (Configuration["ApiSettings:ApiKey"] ?? string.Empty).Trim();
+            Console.WriteLine($"[Config] ApiSettings:ApiKey len={key.Length} last4={(key.Length>=4?key[^4..]:"")}");
+            
             services.Configure<ApiSettings>(Configuration.GetSection("ApiSettings"));
 
             services.AddHttpClient();
@@ -32,7 +36,27 @@ namespace IntegrationSystem.Configuration
             services.AddControllers();
 
             services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Integration API", Version = "v1" });
+                c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+                {
+                    Description = "API Key via X-API-KEY header",
+                    Name = "X-API-KEY",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "ApiKey" }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
         }
 
         public void Configure(WebApplication app, IWebHostEnvironment env)

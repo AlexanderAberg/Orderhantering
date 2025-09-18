@@ -26,42 +26,41 @@ namespace IntegrationSystem.Services
         public async Task ProcessOrderAsync(Order itOrder)
         {
             var integrationOrder = MapFromItOrder(itOrder);
-
             await ProcessOrderAsync(integrationOrder);
         }
 
         public async Task ProcessOrderAsync(OrderModel order)
         {
-            _logger.LogInformation("Startar integration: order till IT och OT");
-
+            _logger.LogInformation("Startar integration för order {OrderId}", order.Id);
             _metrics.SetCurrentActiveOrders(1);
 
-            await _metrics.TrackOrderSummaryAsync(async () =>
+            try
             {
-                await _itService.SendOrderAsync(order);
-                await _otService.WriteOrderToModbusAsync(order.Id, order.Quantity);
-            });
+                await _metrics.TrackOrderSummaryAsync(async () =>
+                {
+                    await _otService.WriteOrderToModbusAsync(order.Id, order.ProductId, order.Quantity);
 
-            _metrics.IncrementOrdersProcessed();
-            _metrics.SetCurrentActiveOrders(0);
+                    try { await _itService.SendOrderAsync(order); }
+                    catch (Exception ex) { _logger.LogWarning(ex, "IT-notifiering misslyckades för order {OrderId} (ignoreras)", order.Id); }
+                });
 
-            _logger.LogInformation("Integration slutförd: order skickad till IT och OT");
-        }
-
-        
-        private OrderModel MapFromItOrder(Order order)
-        {
-            return new OrderModel
+                _metrics.IncrementOrdersProcessed();
+                _logger.LogInformation("Integration klar för order {OrderId}", order.Id);
+            }
+            finally
             {
-                Id = order.Id,
-                ProductName = order.Product?.Name ?? "Unknown",
-                Quantity = order.Quantity,
-            };
+                _metrics.SetCurrentActiveOrders(0);
+            }
         }
 
-        public object GetStatus()
+        private OrderModel MapFromItOrder(Order order) => new()
         {
-            return new { Status = "Allt OK" };
-        }
+            Id = order.Id,
+            ProductId = order.ProductId,
+            ProductName = order.Product?.Name ?? "Unknown",
+            Quantity = order.Quantity,
+        };
+
+        public object GetStatus() => new { Status = "OK" };
     }
 }
