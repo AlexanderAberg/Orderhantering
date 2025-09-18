@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ITSystem.Integration;
 
 namespace ITSystem
 {
@@ -31,6 +32,12 @@ namespace ITSystem
 
                     services.AddDbContext<OrderDbContext>(options =>
                         options.UseSqlServer(connectionString));
+
+                    services.AddHttpClient<IntegrationClient>(client =>
+                    {
+                        var baseUrl = context.Configuration["Integration:BaseUrl"] ?? "http://localhost:5000";
+                        client.BaseAddress = new Uri(baseUrl);
+                    });
 
                     services.AddScoped<IOrderService, OrderService>();
                     services.AddScoped<IUserService, UserService>();

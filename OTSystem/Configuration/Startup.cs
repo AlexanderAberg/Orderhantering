@@ -83,6 +83,13 @@ namespace OTSystem.Configuration
                 var status = productionService.GetCurrentStatus();
                 return Results.Ok(status);
             });
+
+            app.MapPost("/api/test/jira", async (ProductionLineService production) =>
+            {
+                var order = new OTSystem.Models.OrderModel { Id = 999, ProductName = "Test-Product", Quantity = 1 };
+                await production.StartProductionAsync(order);
+                return Results.Ok(new { message = "Test Jira issue attempted" });
+            });
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using EasyModbus;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using OTSystem.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,61 +11,82 @@ namespace OTSystem.Services
     public class IndustrialControlSystem
     {
         private readonly ILogger<IndustrialControlSystem> _logger;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ModbusServer _modbusServer;
         private CancellationTokenSource? _cancellationTokenSource;
         private Task? _modbusTask;
+        private int _processing = 0;
 
-        private static double currentTemperature = 20.0;
-        private const double TargetTemperature = 25.0;
-        private static bool heaterOn = false;
-        private static bool messageReceived = false;
-
-        public IndustrialControlSystem(ILogger<IndustrialControlSystem> logger)
+        public IndustrialControlSystem(ILogger<IndustrialControlSystem> logger, IServiceScopeFactory scopeFactory)
         {
             _logger = logger;
-            _modbusServer = new ModbusServer
-            {
-                Port = 502
-            };
+            _scopeFactory = scopeFactory;
+
+            _modbusServer = new ModbusServer { Port = 502 };
 
             _modbusServer.CoilsChanged += (startAddress, numberOfCoils) =>
             {
-                _logger.LogInformation("🌀 CoilsChanged event fired at {Time}", DateTime.Now);
-                _logger.LogInformation("   Start Address: {Start}, Count: {Count}", startAddress, numberOfCoils);
+                var commit = _modbusServer.coils.localArray[2];
+                _logger.LogInformation("🌀 CoilsChanged at {Time}. Start={Start} Count={Count}, commit@2={Commit}",
+                    DateTime.Now, startAddress, numberOfCoils, commit);
 
-                for (int i = 0; i < numberOfCoils; i++)
+                if (!commit) return;
+
+                if (Interlocked.Exchange(ref _processing, 1) == 1)
                 {
-                    int address = startAddress + i;
-                    if (address >= 0 && address < _modbusServer.coils.localArray.Length)
-                    {
-                        _logger.LogInformation("   Coil[{Address}] = {Value}", address, _modbusServer.coils.localArray[address]);
-                    }
+                    _logger.LogInformation("Commit received but processing already in progress; ignoring.");
+                    return;
                 }
 
-                messageReceived = true;
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(100);
+
+                        int orderId   = _modbusServer.holdingRegisters.localArray[2];
+                        int productId = _modbusServer.holdingRegisters.localArray[3];
+                        int quantity  = _modbusServer.holdingRegisters.localArray[4];
+
+                        _logger.LogInformation("🔎 Snapshot read: orderId={OrderId}, productId={ProductId}, quantity={Quantity}", orderId, productId, quantity);
+
+                        _modbusServer.coils.localArray[2] = false;
+                        _logger.LogInformation("🔁 Commit coil[2] reset to false by OT.");
+
+                        using var scope = _scopeFactory.CreateScope();
+                        var production = scope.ServiceProvider.GetRequiredService<ProductionLineService>();
+
+                        var order = new OrderModel
+                        {
+                            Id = orderId,
+                            ProductName = $"Produkt {productId}",
+                            Quantity = quantity
+                        };
+
+                        _logger.LogInformation("▶️ Starting production: orderId={OrderId}, productId={ProductId}, qty={Quantity}", orderId, productId, quantity);
+                        await production.StartProductionAsync(order);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to trigger production from commit coil");
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref _processing, 0);
+                    }
+                });
             };
 
             _modbusServer.HoldingRegistersChanged += (startAddress, numberOfRegisters) =>
             {
-                _logger.LogInformation("📦 HoldingRegistersChanged event fired at {Time}", DateTime.Now);
-                _logger.LogInformation("   Start Address: {Start}, Count: {Count}", startAddress, numberOfRegisters);
-
+                _logger.LogInformation("📦 HoldingRegistersChanged at {Time}. Start={Start} Count={Count}", DateTime.Now, startAddress, numberOfRegisters);
                 for (int i = 0; i < numberOfRegisters; i++)
                 {
                     int address = startAddress + i;
                     if (address >= 0 && address < _modbusServer.holdingRegisters.localArray.Length)
-                    {
                         _logger.LogInformation("   HoldingRegister[{Address}] = {Value}", address, _modbusServer.holdingRegisters.localArray[address]);
-                    }
                 }
             };
-
-            _modbusServer.holdingRegisters.localArray[0] = 123;
-            _modbusServer.holdingRegisters.localArray[1] = 456;
-            _modbusServer.coils.localArray[0] = true;
-            _modbusServer.holdingRegisters.localArray[10] = 789;
-            _modbusServer.inputRegisters[0] = 999;
-            _modbusServer.discreteInputs[0] = true;
         }
 
         public void Run()
@@ -86,15 +109,7 @@ namespace OTSystem.Services
                     _logger.LogInformation("✅ EasyModbus TCP Slave started.");
 
                     while (!token.IsCancellationRequested)
-                    {
-                        if (messageReceived)
-                        {
-                            _logger.LogInformation("📩 Order received via Modbus!");
-                            messageReceived = false;
-                        }
-
                         Thread.Sleep(1000);
-                    }
 
                     _logger.LogInformation("🛑 Modbus server cancellation requested.");
                 }
@@ -107,21 +122,14 @@ namespace OTSystem.Services
 
         public async Task StopAsync()
         {
-            if (_cancellationTokenSource == null)
-                return;
+            if (_cancellationTokenSource == null) return;
 
             _logger.LogInformation("🚦 Stopping EasyModbus TCP Slave...");
-
             try
             {
                 _cancellationTokenSource.Cancel();
                 _modbusServer.StopListening();
-
-                if (_modbusTask != null)
-                {
-                    await _modbusTask;
-                }
-
+                if (_modbusTask != null) await _modbusTask;
                 _logger.LogInformation("🟢 EasyModbus TCP Slave stopped cleanly.");
             }
             catch (Exception ex)

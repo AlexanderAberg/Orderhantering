@@ -3,16 +3,19 @@ using ITSystem.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using ITSystem.Integration;
 
 namespace ITSystem.Services
 {
     internal class OrderService : IOrderService
     {
         private readonly OrderDbContext _db;
+        private readonly IntegrationClient _integration;
 
-        public OrderService(OrderDbContext db)
+        public OrderService(OrderDbContext db, IntegrationClient integration)
         {
             _db = db;
+            _integration = integration;
         }
 
         public List<Order> GetAllOrders()
@@ -35,6 +38,20 @@ namespace ITSystem.Services
         {
             _db.Orders.Add(order);
             _db.SaveChanges();
+
+            var product = _db.Products.FirstOrDefault(p => p.Id == order.ProductId);
+            if (product != null)
+            {
+                try
+                {
+                    _integration.SendOrderAsync(order.Id, product.Id, product.Name, order.Quantity).GetAwaiter().GetResult();
+                    Console.WriteLine("Order skickad till Integration.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Misslyckades att skicka order till Integration: {ex.Message}");
+                }
+            }
         }
 
         public void UpdateOrder(Order order)
@@ -120,8 +137,17 @@ namespace ITSystem.Services
             _db.SaveChanges();
 
             Console.WriteLine("Order skapad.");
-        }
 
+            try
+            {
+                _integration.SendOrderAsync(order.Id, product.Id, product.Name, order.Quantity).GetAwaiter().GetResult();
+                Console.WriteLine("Order skickad till Integration.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Misslyckades att skicka order till Integration: {ex.Message}");
+            }
+        }
 
         public void ModifyOrDeleteOwnOrder(int userId)
         {
@@ -188,7 +214,6 @@ namespace ITSystem.Services
                 Console.WriteLine("Order borttagen.");
             }
         }
-
 
         public void ManageAllOrders(int adminId)
         {

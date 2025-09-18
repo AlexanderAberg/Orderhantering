@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
@@ -40,9 +41,15 @@ namespace IntegrationSystem.Middleware
                 return;
             }
 
-            if (!_apiKey.Equals(extractedApiKey))
+            var received = extractedApiKey.ToString().Trim();
+            var expected = (_apiKey ?? string.Empty).Trim();
+
+            if (!string.Equals(expected, received, StringComparison.Ordinal))
             {
-                _logger.LogWarning("Ogiltig API-nyckel.");
+                _logger.LogWarning("Ogiltig API-nyckel. Expected len={ExpectedLen} last4={ExpectedLast4}, got len={GotLen} last4={GotLast4}",
+                    expected.Length, expected[^Math.Min(4, expected.Length)..],
+                    received.Length, received[^Math.Min(4, received.Length)..]);
+
                 context.Response.StatusCode = 403;
                 await context.Response.WriteAsync("Ogiltig API-nyckel.");
                 return;
