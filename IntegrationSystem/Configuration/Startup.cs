@@ -23,7 +23,8 @@ namespace IntegrationSystem.Configuration
         public void ConfigureServices(IServiceCollection services)
         {
             var key = (Configuration["ApiSettings:ApiKey"] ?? string.Empty).Trim();
-
+            Console.WriteLine($"[Config] ApiSettings:ApiKey len={key.Length} last4={(key.Length>=4?key[^4..]:"")}");
+            
             services.Configure<ApiSettings>(Configuration.GetSection("ApiSettings"));
 
             services.AddHttpClient();
