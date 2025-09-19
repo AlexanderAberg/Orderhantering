@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "IntegrationService": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5000;https://localhost:5001",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "Integration__ApiKey": "Z1f%8Rm#Kp7uXeL9tMdW4!vU"
+      }
+    }
+  }
+}
